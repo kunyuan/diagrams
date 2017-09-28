@@ -1,0 +1,65 @@
+# Created by .gitignore support plugin (hsz.mobi)
+### C++ template
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Data
+*.dat
+*.log
+*.gv
+*.txt
+*.pstats
+
+# Figure
+*.png
+*.jpg
+*.ps
+*.eps
+*.pdf
+*.svg
+
+*.zip
+*.npy
+*.pkl
+*.hkl
+*.npz
+*.pyc
+*.xccheckout
+*.xcuserstate
+doc
+data
+data*
+diagram
+diagram*
+infile
+outfile
+.DS_Store
+*.DS_Store
+build
+Output
+Error
+_job_*
+.ipynb_checkpoints
+
