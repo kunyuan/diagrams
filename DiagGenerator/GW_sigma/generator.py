@@ -304,7 +304,7 @@ def SaveSigmaDiagrams(MxOrder):
             for spin in Spins:
                 Diagrams[Order].append({"Diagram": permu, "FermiSign": FermiSignDict[permu], "Spin": spin})
     Sigma = {"Sigma": Diagrams}
-    IO.SaveDict("Sigma", "w", Sigma)
+    IO.SaveDict("Sigma.dig", "w", Sigma)
 
 class Test(unittest.TestCase):
  
