@@ -179,7 +179,8 @@ def check_Unique_Permutation(permutation, InteractionPairs, PermutationDict):
     return list(Deformation)
 
 def CheckSpinConserved(permutation, spin):
-    ### The spins should satisfy conservation at each interaction line
+    ### The spins should satisfy conservation at each interaction line:
+    ### up up up up, up up down down, down down up up, down down down down, up down down up, down up up down
 
     Order = len(permutation)/2
     for i in range(Order):
@@ -190,7 +191,20 @@ def CheckSpinConserved(permutation, spin):
             return False
     return True
 
-def GetSpins(permutation):
+def CheckSpinFermiLoop(permutation, spin):
+    ### The spins should satisfy conservation at each interaction line:
+    ### up up up up, up up down down, down down up up, down down down down
+
+    Order = len(permutation)/2
+    for i in range(Order):
+        left, right = i*2, i*2+1
+        leftin = permutation.index(left)
+        rightin = permutation.index(right)
+        if spin[leftin] != spin[left] or spin[rightin] != spin[right]:
+            return False
+    return True
+
+def GetSpins(permutation, conservation="Heisenberg"):
     size = len(permutation)
 
     ## Get all the 2^n possible spin configurations
@@ -202,7 +216,10 @@ def GetSpins(permutation):
             SpinLists.append(tuple(newspins))
 
     ## Get all the spin configuration that satisfies conservation law
-    SpinLists = [spin for spin in SpinLists if CheckSpinConserved(permutation, spin)]
+    if conservation == "Heisenberg":
+        SpinLists = [spin for spin in SpinLists if CheckSpinConserved(permutation, spin)]
+    elif conservation == "Fermi Loops":
+        SpinLists = [spin for spin in SpinLists if CheckSpinFermiLoop(permutation, spin)]
 
     return SpinLists
 
@@ -286,7 +303,7 @@ def DrawDiagrams(Reference, InteractionPairs, PermutationList, NumberList=[]):
             f.write("}\n")
         f.close()
 
-def SaveSigmaDiagrams(MxOrder):
+def SaveSigmaDiagrams(MxOrder, conservation, filename):
 
     Diagrams = {}
     for Order in range(1, MxOrder+1):
@@ -300,14 +317,15 @@ def SaveSigmaDiagrams(MxOrder):
         FermiSigns = []
         SpinConfs = []
         for permu in IrreducibleDiagrams:
-            spins = GetSpins(permu)
+            spins = GetSpins(permu, conservation)
             for spin in spins:
                 Permutations.append(permu)
                 FermiSigns.append(FermiSignDict[permu])
                 SpinConfs.append(spin)
         Diagrams[Order] = {"Permutations": Permutations, "Spins":SpinConfs, "FermiSigns": FermiSigns}
+        
     Sigma = {"Sigma": Diagrams}
-    IO.SaveDict("Sigma.dig", "w", Sigma)
+    IO.SaveDict(filename, "w", Sigma)
 
 class Test(unittest.TestCase):
  
@@ -378,5 +396,6 @@ if __name__ == '__main__':
     FactorList = [len(p) for p in UnlabeledDiagramList]
     DrawDiagrams(Reference, InteractionPairs, UniqueDiagrams, FactorList)
 
-    SaveSigmaDiagrams(4)
+    SaveSigmaDiagrams(4, conservation="Heisenberg", filename="Sigma_Heisenberg_spins.dig")
+    SaveSigmaDiagrams(4, conservation="Fermi Loops", filename="Sigma_Fermi_loops_spins.dig")
     unittest.main()
