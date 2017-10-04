@@ -290,19 +290,22 @@ def SaveSigmaDiagrams(MxOrder):
 
     Diagrams = {}
     for Order in range(1, MxOrder+1):
-        Diagrams[Order] = []
         Reference=GetReference(Order)
         InteractionPairs=GetInteractionPairs(Order)
         Permutations, PermutationDict, FermiSignDict = GetAllPermutations(Order)
         IrreducibleDiagrams = RemoveReducibleGW(InteractionPairs, PermutationDict)
         IrreducibleDiagrams = [item for sublist in IrreducibleDiagrams for item in sublist]
 
+        Permutations = []
+        FermiSigns = []
+        SpinConfs = []
         for permu in IrreducibleDiagrams:
-            Spins = GetSpins(permu)
-            print permu, FermiSignDict[permu]
-            print "digram ", permu, ", number of spin configurations: ", len(Spins)
-            for spin in Spins:
-                Diagrams[Order].append({"Diagram": permu, "FermiSign": FermiSignDict[permu], "Spin": spin})
+            spins = GetSpins(permu)
+            for spin in spins:
+                Permutations.append(permu)
+                FermiSigns.append(FermiSignDict[permu])
+                SpinConfs.append(spin)
+        Diagrams[Order] = {"Permutations": Permutations, "Spins":SpinConfs, "FermiSigns": FermiSigns}
     Sigma = {"Sigma": Diagrams}
     IO.SaveDict("Sigma.dig", "w", Sigma)
 

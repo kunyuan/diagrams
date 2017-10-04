@@ -30,6 +30,7 @@
 *.log
 *.gv
 *.txt
+*.dig.txt
 *.pstats
 
 # Figure
