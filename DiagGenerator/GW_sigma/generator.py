@@ -319,10 +319,10 @@ def SaveSigmaDiagrams(MxOrder, conservation, filename):
         for permu in IrreducibleDiagrams:
             spins = GetSpins(permu, conservation)
             for spin in spins:
-                Permutations.append(permu)
+                Permutations.append(list(permu))
                 FermiSigns.append(FermiSignDict[permu])
-                SpinConfs.append(spin)
-        Diagrams[Order] = {"Permutations": Permutations, "Spins":SpinConfs, "FermiSigns": FermiSigns}
+                SpinConfs.append(list(spin))
+        Diagrams[str(Order)] = {"Permutations": Permutations, "Spins":SpinConfs, "FermiSigns": FermiSigns}
         
     Sigma = {"Sigma": Diagrams}
     IO.SaveDict(filename, "w", Sigma)
