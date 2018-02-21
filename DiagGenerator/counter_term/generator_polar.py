@@ -34,7 +34,6 @@ def IsConnected(permutation, reference, InteractionPairs):
     for edge in diagram:
         if edge[0]!=edge[1] and not diagram_union.is_connected(edge[0], edge[1]):
             diagram_union.union(edge[0], edge[1])
-
     return diagram_union.get_n_circles() == 1
 
 def HasTadpole(permutation, reference):
@@ -48,6 +47,16 @@ def HasBuble(permutation, reference):
         # end=reference[i]
         end=permutation[permutation[i]]
         if i==end and i!=0 and permutation[i]!=0:
+            return True
+    return False
+
+def HasFock(permutation, reference):
+    for i in range(len(reference)):
+        # end=reference[i]
+        end=permutation[i]
+        if i==0 or i==1:
+            continue
+        if abs(i-end)==1 and min(i, end)%2==0:
             return True
     return False
 
@@ -112,12 +121,12 @@ def GetAllPermutations(Order):
             del permutation_dict[p]
             del fermi_sign[p]
 
-    print "Diagram Number: {0}".format(len(permutation_dict))
-    print "Check Buble"
-    for p in permutation_dict.keys():
-        if HasBuble(p, reference):
-            del permutation_dict[p]
-            del fermi_sign[p]
+    # print "Diagram Number: {0}".format(len(permutation_dict))
+    # print "Check Buble"
+    # for p in permutation_dict.keys():
+        # if HasBuble(p, reference):
+            # del permutation_dict[p]
+            # del fermi_sign[p]
 
     print "Diagram Number: {0}".format(len(permutation_dict))
     print "Check connectivity"
@@ -150,9 +159,7 @@ def swap_LR(permutation, i, j):
     return tuple(permutation)
 
 def check_Unique_Permutation(permutation, InteractionPairs, PermutationDict):
-
     measure_in=0
-
     Order = len(InteractionPairs)
     Deformation = [permutation]
     for idx in range(1, Order):
@@ -178,51 +185,6 @@ def check_Unique_Permutation(permutation, InteractionPairs, PermutationDict):
     print "remaining length of permutation dictionary:", len(PermutationDict)
     return list(Deformation)
 
-def CheckSpinConserved(permutation, spin):
-    ### The spins should satisfy conservation at each interaction line:
-    ### up up up up, up up down down, down down up up, down down down down, up down down up, down up up down
-
-    Order = len(permutation)/2
-    for i in range(Order):
-        left, right = i*2, i*2+1
-        leftin = permutation.index(left)
-        rightin = permutation.index(right)
-        if spin[leftin] + spin[rightin] - spin[left] - spin[right] != 0:
-            return False
-    return True
-
-def CheckSpinFermiLoop(permutation, spin):
-    ### The spins should satisfy conservation at each interaction line:
-    ### up up up up, up up down down, down down up up, down down down down
-
-    Order = len(permutation)/2
-    for i in range(Order):
-        left, right = i*2, i*2+1
-        leftin = permutation.index(left)
-        rightin = permutation.index(right)
-        if spin[leftin] != spin[left] or spin[rightin] != spin[right]:
-            return False
-    return True
-
-def GetSpins(permutation, conservation="Heisenberg"):
-    size = len(permutation)
-
-    ## Get all the 2^n possible spin configurations
-    SpinLists = [tuple([0 for i in range(size)])]
-    for pivot in range(size):
-        for i in range(len(SpinLists)):
-            newspins = list(SpinLists[i])
-            newspins[pivot] = 1
-            SpinLists.append(tuple(newspins))
-
-    ## Get all the spin configuration that satisfies conservation law
-    if conservation == "Heisenberg":
-        SpinLists = [spin for spin in SpinLists if CheckSpinConserved(permutation, spin)]
-    elif conservation == "Fermi Loops":
-        SpinLists = [spin for spin in SpinLists if CheckSpinFermiLoop(permutation, spin)]
-
-    return SpinLists
-
 def Group(InteractionPairs, PermutationDict):
     UnlabeledDiagramList=[]
     FactorList=[]
@@ -244,7 +206,6 @@ def Group(InteractionPairs, PermutationDict):
 
 
 def RemoveReducibleGW(InteractionPairs, PermutationDict):
-
     UnlabeledDiagramList =  Group(InteractionPairs, PermutationDict)
     print "Total Unique Diagrams {0}\n".format(len(UnlabeledDiagramList))
     TempList=UnlabeledDiagramList[:]
@@ -254,7 +215,7 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         Flag=True
         for i in range(len(kW)):
             if Flag and abs(kW[i])<1e-12:
-                print "k=0 on W {0}: {1}".format(p, kW[i])
+                # print "k=0 on W {0}: {1}".format(p, kW[i])
                 UnlabeledDiagramList.remove(g)
                 Flag=False
                 break
@@ -262,7 +223,7 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         for i in range(len(kW)):
             for j in range(i+1,len(kW)):
                 if Flag and abs(abs(kW[i])-abs(kW[j]))<1e-12:
-                    print "Same k on W for {0}: {1} on {2}; {3} on {4}".format(p, kW[i],i,kW[j],j)
+                    # print "Same k on W for {0}: {1} on {2}; {3} on {4}".format(p, kW[i],i,kW[j],j)
                     UnlabeledDiagramList.remove(g)
                     Flag=False
                     break
@@ -270,13 +231,54 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         for i in range(0,len(kG)):
             for j in range(i+1,len(kG)):
                 if Flag and abs(kG[i]-kG[j])<1e-12:
-                    print "Same k on G for {0}: {1} on {2}; {3} on {4}".format(p, kG[i],i,kG[j],j)
+                    # print "Same k on G for {0}: {1} on {2}; {3} on {4}".format(p, kG[i],i,kG[j],j)
                     # print "Same k on W for {0}: {1}; 1, {2}".format(p, kG[i],kG[j])
                     UnlabeledDiagramList.remove(g)
                     Flag=False
-                    print "Flag",Flag
+                    # print "Flag",Flag
                     break
     return UnlabeledDiagramList
+
+def RemoveReducibleG_HF_V(InteractionPairs, PermutationDict):
+    UnlabeledDiagramList =  Group(InteractionPairs, PermutationDict)
+    print "Total Unique Diagrams {0}\n".format(len(UnlabeledDiagramList))
+    TempList=UnlabeledDiagramList[:]
+    UnlabeledBubleDiagramList=[]
+    for g in TempList:
+        p=g[0]
+        kG, kW=AssignMomentums(p, Reference, InteractionPairs)
+        Flag=True
+        for i in range(len(kW)):
+            if Flag and abs(kW[i])<1e-12:
+                # print "k=0 on W {0}: {1}".format(p, kW[i])
+                UnlabeledDiagramList.remove(g)
+                Flag=False
+                break
+
+        for j in range(1,len(kW)):
+            if Flag and abs(abs(kW[0])-abs(kW[j]))<1e-12:
+                # start=2*i
+                # end=p[p[start]]
+                # if start==end and i!=0:
+                    # continue
+                # start=2*i+1
+                # end=p[p[start]]
+                # if start==end and i!=0:
+                    # continue
+                # print "Same k on W for {0}: {1} on {2}; {3} on {4}".format(p, kW[i],i,kW[j],j)
+                UnlabeledDiagramList.remove(g)
+                Flag=False
+                break
+
+        if Flag:
+            if HasFock(g[0], Reference):
+                UnlabeledDiagramList.remove(g)
+            else:
+                if HasBuble(g[0], Reference):
+                    UnlabeledBubleDiagramList.append(g[0])
+                else:
+                    print "NoBuble", g[0]
+    return UnlabeledDiagramList, UnlabeledBubleDiagramList
 
 def DrawDiagrams(Reference, InteractionPairs, PermutationList, NumberList=[]):
     i=0
@@ -303,8 +305,7 @@ def DrawDiagrams(Reference, InteractionPairs, PermutationList, NumberList=[]):
             f.write("}\n")
         f.close()
 
-def SaveSigmaDiagrams(MxOrder, conservation, filename):
-
+def SaveSigmaDiagrams(MxOrder, filename):
     Diagrams = {}
     for Order in range(1, MxOrder+1):
         Reference=GetReference(Order)
@@ -315,17 +316,34 @@ def SaveSigmaDiagrams(MxOrder, conservation, filename):
 
         Permutations = []
         FermiSigns = []
-        SpinConfs = []
         for permu in IrreducibleDiagrams:
-            spins = GetSpins(permu, conservation)
-            for spin in spins:
-                Permutations.append(list(permu))
-                FermiSigns.append(FermiSignDict[permu])
-                SpinConfs.append(list(spin))
-        Diagrams[str(Order)] = {"Permutations": Permutations, "Spins":SpinConfs, "FermiSigns": FermiSigns}
+            Permutations.append(list(permu))
+            FermiSigns.append(FermiSignDict[permu])
+        Diagrams[str(Order)] = {"Permutations": Permutations, "FermiSigns": FermiSigns}
+        print "Order ", Order, len(Permutations)
         
     Sigma = {"Sigma": Diagrams}
     IO.SaveDict(filename, "w", Sigma)
+
+def SavePolarDiagrams(MxOrder, filename):
+    Diagrams = {}
+    for Order in range(1, MxOrder+1):
+        Reference=GetReference(Order)
+        InteractionPairs=GetInteractionPairs(Order)
+        Permutations, PermutationDict, FermiSignDict = GetAllPermutations(Order)
+        IrreducibleDiagrams = RemoveReducibleGW(InteractionPairs, PermutationDict)
+        IrreducibleDiagrams = [item for sublist in IrreducibleDiagrams for item in sublist]
+
+        Permutations = []
+        FermiSigns = []
+        for permu in IrreducibleDiagrams:
+            Permutations.append(list(permu))
+            FermiSigns.append(FermiSignDict[permu])
+        Diagrams[str(Order)] = {"Permutations": Permutations, "FermiSigns": FermiSigns}
+        
+    Polar = {"Polar": Diagrams}
+    IO.SaveDict(filename, "w", Polar)
+
 
 class Test(unittest.TestCase):
  
@@ -368,27 +386,29 @@ class Test(unittest.TestCase):
             print "Check Ver {0}".format(i)
             self.assertTrue(abs(-kG[i]+kG[permutation.index(i)]-(-1)**(i%2)*kW[int(i/2)])<1e-13)
  
-
-
-
-
 if __name__ == '__main__':
-    Order=3
+    Order=5
     Reference=GetReference(Order)
     InteractionPairs=GetInteractionPairs(Order)
     PermutationList, PermutationDict, FermiSignDict = GetAllPermutations(Order)
 
     # print PermutationList
     # DrawDiagrams(Reference, InteractionPairs, PermutationList)
-    UnlabeledDiagramList = RemoveReducibleGW(InteractionPairs, PermutationDict)
+    # UnlabeledDiagramList = RemoveReducibleGW(InteractionPairs, PermutationDict)
+    UnlabeledDiagramList, UnlabeledBubleDiagramList = RemoveReducibleG_HF_V(InteractionPairs, PermutationDict)
 
     UniqueDiagrams=[]
-    print "Total Unique Diagrams for Sigma {0}\n".format(len(UnlabeledDiagramList))
+    print "Total Unique Diagrams for Polar:  {0}\n".format(len(UnlabeledDiagramList))
+    print "Total Unique Buble Diagrams for Polar: {0}\n".format(len(UnlabeledBubleDiagramList))
     for g in UnlabeledDiagramList:
+        # print g[0]
         # for e in g:
             # print "{0}".format(e)
         #print "Total {0}\n".format(len(g))
         UniqueDiagrams.append(g[0])
+
+    for g in UnlabeledBubleDiagramList:
+        print g
 
     # print UniqueDiagrams
     # DrawDiagrams(Reference, InteractionPairs, UniqueDiagrams)
@@ -396,6 +416,6 @@ if __name__ == '__main__':
     FactorList = [len(p) for p in UnlabeledDiagramList]
     DrawDiagrams(Reference, InteractionPairs, UniqueDiagrams, FactorList)
 
-    # SaveSigmaDiagrams(4, conservation="Heisenberg", filename="Sigma_Heisenberg_spins.dig")
-    # SaveSigmaDiagrams(3, conservation="Fermi Loops", filename="Sigma_Fermi_loops_spins.dig")
-    unittest.main()
+    # SaveSigmaDiagrams(2, filename="Sigma_Fermi_loops.dig")
+    # SavePolarDiagrams(2, filename="Polar_Fermi_loops.dig")
+    # unittest.main()

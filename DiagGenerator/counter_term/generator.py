@@ -50,6 +50,14 @@ def HasBuble(permutation, reference):
             return True
     return False
 
+def HasFock(permutation, reference):
+    for i in range(len(reference)):
+        # end=reference[i]
+        end=permutation[i]
+        if abs(i-end)==1 and min(i, end)%2==0:
+            return True
+    return False
+
 def FindIndependentK(permutation, reference, InteractionPairs):
     # kList=[(random.randint(0, Nmax), random.randint(0,Nmax)) for i in range(len(InteractionPairs)+1)]
     N=len(InteractionPairs)
@@ -205,7 +213,7 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         Flag=True
         for i in range(len(kW)):
             if Flag and abs(kW[i])<1e-12:
-                print "k=0 on W {0}: {1}".format(p, kW[i])
+                # print "k=0 on W {0}: {1}".format(p, kW[i])
                 UnlabeledDiagramList.remove(g)
                 Flag=False
                 break
@@ -213,7 +221,7 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         for i in range(len(kW)):
             for j in range(i+1,len(kW)):
                 if Flag and abs(abs(kW[i])-abs(kW[j]))<1e-12:
-                    print "Same k on W for {0}: {1} on {2}; {3} on {4}".format(p, kW[i],i,kW[j],j)
+                    # print "Same k on W for {0}: {1} on {2}; {3} on {4}".format(p, kW[i],i,kW[j],j)
                     UnlabeledDiagramList.remove(g)
                     Flag=False
                     break
@@ -221,13 +229,28 @@ def RemoveReducibleGW(InteractionPairs, PermutationDict):
         for i in range(0,len(kG)):
             for j in range(i+1,len(kG)):
                 if Flag and abs(kG[i]-kG[j])<1e-12:
-                    print "Same k on G for {0}: {1} on {2}; {3} on {4}".format(p, kG[i],i,kG[j],j)
+                    # print "Same k on G for {0}: {1} on {2}; {3} on {4}".format(p, kG[i],i,kG[j],j)
                     # print "Same k on W for {0}: {1}; 1, {2}".format(p, kG[i],kG[j])
                     UnlabeledDiagramList.remove(g)
                     Flag=False
                     # print "Flag",Flag
                     break
     return UnlabeledDiagramList
+
+def RemoveReducibleG_HF_V(InteractionPairs, PermutationDict):
+    UnlabeledDiagramList =  Group(InteractionPairs, PermutationDict)
+    print "Total Unique Diagrams {0}\n".format(len(UnlabeledDiagramList))
+    TempList=UnlabeledDiagramList[:]
+    UnlabeledBubleDiagramList=[]
+    for g in TempList:
+        if HasFock(g[0], Reference):
+            UnlabeledDiagramList.remove(g)
+        else:
+            if HasBuble(g[0], Reference):
+                UnlabeledBubleDiagramList.append(g[0])
+            else:
+                print "NoBuble", g[0]
+    return UnlabeledDiagramList, UnlabeledBubleDiagramList
 
 def DrawDiagrams(Reference, InteractionPairs, PermutationList, NumberList=[]):
     i=0
@@ -269,6 +292,7 @@ def SaveSigmaDiagrams(MxOrder, filename):
             Permutations.append(list(permu))
             FermiSigns.append(FermiSignDict[permu])
         Diagrams[str(Order)] = {"Permutations": Permutations, "FermiSigns": FermiSigns}
+        print "Order ", Order, len(Permutations)
         
     Sigma = {"Sigma": Diagrams}
     IO.SaveDict(filename, "w", Sigma)
@@ -334,27 +358,29 @@ class Test(unittest.TestCase):
             print "Check Ver {0}".format(i)
             self.assertTrue(abs(-kG[i]+kG[permutation.index(i)]-(-1)**(i%2)*kW[int(i/2)])<1e-13)
  
-
-
-
-
 if __name__ == '__main__':
-    Order=2
+    Order=5
     Reference=GetReference(Order)
     InteractionPairs=GetInteractionPairs(Order)
     PermutationList, PermutationDict, FermiSignDict = GetAllPermutations(Order)
 
     # print PermutationList
     # DrawDiagrams(Reference, InteractionPairs, PermutationList)
-    UnlabeledDiagramList = RemoveReducibleGW(InteractionPairs, PermutationDict)
+    # UnlabeledDiagramList = RemoveReducibleGW(InteractionPairs, PermutationDict)
+    UnlabeledDiagramList, UnlabeledBubleDiagramList = RemoveReducibleG_HF_V(InteractionPairs, PermutationDict)
 
     UniqueDiagrams=[]
-    print "Total Unique Diagrams for Sigma {0}\n".format(len(UnlabeledDiagramList))
+    print "Total Unique Diagrams for Sigma:  {0}\n".format(len(UnlabeledDiagramList))
+    print "Total Unique Buble Diagrams for Sigma: {0}\n".format(len(UnlabeledBubleDiagramList))
     for g in UnlabeledDiagramList:
+        # print g[0]
         # for e in g:
             # print "{0}".format(e)
         #print "Total {0}\n".format(len(g))
         UniqueDiagrams.append(g[0])
+
+    for g in UnlabeledBubleDiagramList:
+        print g
 
     # print UniqueDiagrams
     # DrawDiagrams(Reference, InteractionPairs, UniqueDiagrams)
@@ -362,6 +388,6 @@ if __name__ == '__main__':
     FactorList = [len(p) for p in UnlabeledDiagramList]
     DrawDiagrams(Reference, InteractionPairs, UniqueDiagrams, FactorList)
 
-    SaveSigmaDiagrams(4, filename="Sigma_Fermi_loops.dig")
-    SavePolarDiagrams(2, filename="Polar_Fermi_loops.dig")
+    # SaveSigmaDiagrams(2, filename="Sigma_Fermi_loops.dig")
+    # SavePolarDiagrams(2, filename="Polar_Fermi_loops.dig")
     # unittest.main()
